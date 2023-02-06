@@ -8,17 +8,26 @@ from rest_framework.response import Response
 from .models import Student, Department
 from .serializers import StudentSerializer, DepartmentSerilaizer
 
-from django.db.models import Sum
-from slick_reporting.views import SlickReportView
-from slick_reporting.fields import SlickReportField
-
 
 class DepartmentListView(APIView):
+    """
+    This view is used to list all available instances of department data
+    """
+
     def get(self, request):
+        """
+        This module responds to http GET requests, similarily use post, put, etc
+        for their respective HTTP methods
+        """
+        # .objects  is used to perform data base operations, such as retrieving, etc
+        # here we are retrieving all the instances of department using objects.all()
         query = Department.objects.all()
         print(query)
+        # Here we serialize the retrieved data instances, many=True means there are
+        # multuple instances
         serializer = DepartmentSerilaizer(query, many=True)
         print(serializer.data)
+        # Here the json is send as response to the client
         return Response(serializer.data)
 
 
@@ -30,8 +39,12 @@ class StudentListView(APIView):
         return Response(serializer.data)
 
     def post(self, request):
+        # Here we are performing a deserialization, where the request json data
+        # is being converted into model instance
         serializer = StudentSerializer(data=request.data)
+        # Checks whether the given data is valid other-wise raises error
         if serializer.is_valid():
+            # Saves the data in the database of is_valid is true
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
@@ -40,6 +53,7 @@ class StudentListView(APIView):
 
 class StudentView(APIView):
     def get_obj(self, pk):
+        """Helper function to fetch student instance using pk"""
         try:
             query = Student.objects.get(id=pk)
             return query
@@ -52,6 +66,7 @@ class StudentView(APIView):
         return Response(serializer.data)
 
     def put(self, request, pk):
+        """Similar to POST, but we update the current data with the received data"""
         query = self.get_obj(pk)
         serializer = StudentSerializer(query, data=request.data)
         if serializer.is_valid():
@@ -67,58 +82,24 @@ class StudentView(APIView):
 
 
 class StudentAggregateView(APIView):
+    """View to perform aggregation"""
+
     def get(self, request):
+        # Grab the group_by and value url parms
+
         group_by = request.GET.get("group_by")
         value = request.GET.get("value")
+
         if group_by is None and value is not None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        print(group_by)
+        # if both group_by and value is None, return all the instances
         if group_by is None:
             query = Student.objects.all()
         else:
+            # This orm operation performs the group_by
             query = Student.objects.values(group_by).annotate(count=Count(group_by))
             if value is not None:
                 query = Student.objects.filter(**{group_by: value}).count()
         print(query)
         return Response(query)
-
-
-class StudentReport(SlickReportView):
-    report_model = Student
-
-    date_field = "created_at"
-    # a date/datetime field on the report model
-
-    # fields on the report model ... surprise !
-    columns = ["roll", "name", "department", "semester"]
-
-
-class GroupByIntro(SlickReportView):
-
-    report_model = Student
-    date_field = "created_at"
-
-    group_by = "semester"
-    # We can group_by a foreign key or date field
-
-    columns = [
-        "name",
-        SlickReportField.create(
-            method=Count,
-            field="roll",
-            name="roll__sum",
-            verbose_name=("Total Students $"),
-        )
-        # a Slick Report Field is responsible for carrying on the needed calculation(s).
-    ]
-    chart_settings = [
-        {
-            "type": "bar",
-            "data_source": [
-                "roll__sum"
-            ],  # the name of the field containing the data values
-            "title_source": ["name"],  # name of the field containing the data labels
-            "title": "Pie Chart (Quantities) Highcharts",  # to be displayed on the chart
-        }
-    ]
