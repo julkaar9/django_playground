@@ -82,3 +82,43 @@ class StudentAggregateView(APIView):
                 query = Student.objects.filter(**{group_by: value}).count()
         print(query)
         return Response(query)
+
+
+class StudentReport(SlickReportView):
+    report_model = Student
+
+    date_field = "created_at"
+    # a date/datetime field on the report model
+
+    # fields on the report model ... surprise !
+    columns = ["roll", "name", "department", "semester"]
+
+
+class GroupByIntro(SlickReportView):
+
+    report_model = Student
+    date_field = "created_at"
+
+    group_by = "semester"
+    # We can group_by a foreign key or date field
+
+    columns = [
+        "name",
+        SlickReportField.create(
+            method=Count,
+            field="roll",
+            name="roll__sum",
+            verbose_name=("Total Students $"),
+        )
+        # a Slick Report Field is responsible for carrying on the needed calculation(s).
+    ]
+    chart_settings = [
+        {
+            "type": "bar",
+            "data_source": [
+                "roll__sum"
+            ],  # the name of the field containing the data values
+            "title_source": ["name"],  # name of the field containing the data labels
+            "title": "Pie Chart (Quantities) Highcharts",  # to be displayed on the chart
+        }
+    ]

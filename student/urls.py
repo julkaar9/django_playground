@@ -3,7 +3,8 @@ from .views import (
     DepartmentListView,
     StudentListView,
     StudentView,
-    StudentAggregateView, 
+    StudentAggregateView,
+    StudentReport,GroupByIntro
 )
 
 app_name = "student"
@@ -14,5 +15,6 @@ urlpatterns = [
     path(
         "student/aggregate/", StudentAggregateView.as_view(), name="student_aggregate"
     ),
-    path("student/v1/<int:pk>", StudentView.as_view(), name="studentv1"), 
+    path("student/v1/<int:pk>", StudentView.as_view(), name="studentv1"),
+    path("student/dashboard/", GroupByIntro.as_view(), name="dashboard"),
 ]
