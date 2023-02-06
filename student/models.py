@@ -1,3 +1,4 @@
+from datetime import datetime
 from django.db import models
 
 # Create your models here.
@@ -5,6 +6,7 @@ from django.db import models
 
 class Department(models.Model):
     name = models.CharField(max_length=128)
+    created_at = models.DateTimeField("Entry Date", default=datetime.now)
 
     def __str__(self):
         return self.name
@@ -19,6 +21,7 @@ class Student(models.Model):
         Department, related_name="students", on_delete=models.CASCADE
     )
     semester = models.PositiveSmallIntegerField(choices=SEMESTER_CHOICES, default=1)
+    created_at = models.DateTimeField("Entry Date", default=datetime.now)
 
     def __str__(self):
         return f"{self.name} - {self.semester}"

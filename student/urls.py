@@ -3,8 +3,7 @@ from .views import (
     DepartmentListView,
     StudentListView,
     StudentView,
-    StudentAggregateView,
-    TotalProductSales,
+    StudentAggregateView, 
 )
 
 app_name = "student"
